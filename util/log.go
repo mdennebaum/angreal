@@ -24,12 +24,12 @@ func (this *Log) Log(key string, message string) {
 }
 
 func (this *Log) Access(r *http.Request) {
-	message := fmt.Sprintf(logFile, "%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	message := fmt.Sprintf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	this.Log("error", message)
 }
 
 func (this *Log) Error(r *http.Request) {
-	message := fmt.Sprintf(logFile, "%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	message := fmt.Sprintf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	this.Log("error", message)
 }
 
@@ -40,14 +40,14 @@ func (this *Log) Close(key string) {
 }
 
 func (this *Log) CloseAll() {
-	for key, log := range this.logFiles {
+	for _, log := range this.logFiles {
 		log.Close()
 	}
 }
 
-func (this *Log) AddLog(filePath string) {
+func (this *Log) AddLog(path string, key string) {
 	var err error
-	this.logFile, err = os.Create("logfile.txt")
+	this.logFiles[key], err = os.Create(path)
 	if err != nil {
 		log.Fatal("Log file create:", err)
 		return
