@@ -26,7 +26,9 @@ func (this *Host) Init() {
 	this.initStatic()
 }
 
-func (this *Host) initLog() {}
+func (this *Host) initLog() {
+
+}
 
 func (this *Host) addHeaders() {
 
