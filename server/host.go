@@ -7,14 +7,15 @@ logging, file server setup, reverse proxy setup, header addition
 
 import (
 	// "log"
+	"github.com/mdennebaum/angreal/util"
 	"net/http"
 )
 
 type Host struct {
-	Config map[string]interface{}
+	conf *util.DynMap
 }
 
-func NewHost(config map[string]interface{}) *Host {
+func NewHost(config *util.DynMap) *Host {
 	h := Host{config}
 	return &h
 }
@@ -34,9 +35,9 @@ func (this *Host) addHeaders() {
 func (this *Host) initBackends() {}
 
 func (this *Host) initStatic() {
-	url := this.Config["url"].(string)
-	port := this.Config["port"].(string)
-	root := this.Config["root"].(string)
+	url, _ := this.conf.GetString("url")
+	port, _ := this.conf.GetString("port")
+	root, _ := this.conf.GetString("root")
 	http.HandleFunc(url+":"+port+"/", this.getStaticHandler(root))
 }
 

@@ -5,13 +5,12 @@ import (
 	"log"
 	"net/http"
 	"runtime"
-	"strconv"
 	"time"
 )
 
 type Server struct {
-	hosts  []*Host
-	Config util.DynMap
+	hosts []*Host
+	conf  *util.Config
 }
 
 func NewServer() *Server {
@@ -28,23 +27,16 @@ func (this *Server) Init() {
 //init processors
 func (this *Server) initProcs() {
 
-	//try and get the global config
-	if gc, ok := this.Config["global"]; ok {
-
-		//cast it to a map
-		global := gc.(map[string]interface{})
-		//check if we have an explicit processor setting
-		if procs, ok := global["procs"]; ok {
-			//conv to int
-			count, _ := strconv.Atoi(procs.(string))
-			//use the explicit processor count
-			runtime.GOMAXPROCS(count)
-			return
-		}
+	//check if we have an explicit processor setting
+	if procs, ok := this.conf.GetInt("global.procs"); ok {
+		//use the explicit processor count
+		runtime.GOMAXPROCS(procs)
+		return
 	}
 
 	//use all avail processors
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
 }
 
 func (this *Server) Listen() {
@@ -64,20 +56,17 @@ func (this *Server) Listen() {
 
 func (this *Server) setupHosts() {
 	//loop over config vhosts and call setupHost for each
-	if h, ok := this.Config["hosts"]; ok {
-
-		//cast it to a map
-		hosts := h.([]interface{})
-		for _, host_config := range hosts {
-			host := NewHost(host_config.(map[string]interface{}))
-			host.Init()
-			this.hosts = append(this.hosts, host)
+	if hosts, ok := this.conf.GetDynMapSlice("hosts"); ok {
+		for _, host := range hosts {
+			h := NewHost(host)
+			h.Init()
+			this.hosts = append(this.hosts, h)
 		}
 	}
 }
 
 func (this *Server) loadConfig() {
-	config := util.NewConfig("./angreal.conf")
-	config.Load()
-	this.Config = config.Data
+	c := util.NewConfig("./angreal.conf")
+	c.Load()
+	this.conf = c
 }

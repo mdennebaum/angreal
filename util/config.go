@@ -27,24 +27,3 @@ func (this *Config) Load() {
 	json.Unmarshal(cf, &f)
 	this.Map = f.(map[string]interface{})
 }
-
-// func (this *Config) GetString(key string) string {
-// 	if val, ok := this.Data[key]; ok {
-// 		return val.(string)
-// 	}
-// 	return ""
-// }
-
-// func (this *Config) GetArray(key string) []interface{} {
-// 	if val, ok := this.Data[key]; ok {
-// 		return val.([]interface{})
-// 	}
-// 	return nil
-// }
-
-// func (this *Config) GetMap(key string) map[string]interface{} {
-// 	if val, ok := this.Data[key]; ok {
-// 		return val.(map[string]interface{})
-// 	}
-// 	return nil
-// }
