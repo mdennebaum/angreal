@@ -10,7 +10,13 @@ import (
 )
 
 type Server struct {
-	Config map[string]interface{}
+	hosts  []*Host
+	Config util.DynMap
+}
+
+func NewServer() *Server {
+	s := Server{}
+	return &s
 }
 
 func (this *Server) Init() {
@@ -58,33 +64,16 @@ func (this *Server) Listen() {
 
 func (this *Server) setupHosts() {
 	//loop over config vhosts and call setupHost for each
-	if vh, ok := this.Config["vhosts"]; ok {
+	if h, ok := this.Config["hosts"]; ok {
 
 		//cast it to a map
-		vhosts := vh.([]interface{})
-		for _, host := range vhosts {
-			this.setupHost(host)
+		hosts := h.([]interface{})
+		for _, host_config := range hosts {
+			host := NewHost(host_config.(map[string]interface{}))
+			host.Init()
+			this.hosts = append(this.hosts, host)
 		}
 	}
-}
-
-func (this *Server) getStaticHandler(root string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, root+"/"+r.URL.Path[1:])
-	}
-}
-
-func (this *Server) setupHost(host interface{}) {
-	conf := host.(map[string]interface{})
-	url := conf["url"].(string)
-	//static := conf["static"].(string)
-	port := conf["port"].(string)
-	root := conf["root"].(string)
-
-	http.HandleFunc(url+":"+port+"/", this.getStaticHandler(root))
-	// http.HandleFunc(url+":"+port+"/", func(w http.ResponseWriter, r *http.Request) {
-	//  fmt.Fprintf(w, url)
-	// })
 }
 
 func (this *Server) loadConfig() {

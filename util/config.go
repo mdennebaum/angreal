@@ -9,11 +9,11 @@ import (
 
 type Config struct {
 	file string
-	Data map[string]interface{}
+	DynMap
 }
 
 func NewConfig(file string) *Config {
-	c := Config{file, nil}
+	c := Config{file, DynMap{make(map[string]interface{})}}
 	return &c
 }
 
@@ -25,26 +25,26 @@ func (this *Config) Load() {
 	}
 	var f interface{}
 	json.Unmarshal(cf, &f)
-	this.Data = f.(map[string]interface{})
+	this.Map = f.(map[string]interface{})
 }
 
-func (this *Config) GetString(key string) string {
-	if val, ok := this.Data[key]; ok {
-		return val.(string)
-	}
-	return ""
-}
+// func (this *Config) GetString(key string) string {
+// 	if val, ok := this.Data[key]; ok {
+// 		return val.(string)
+// 	}
+// 	return ""
+// }
 
-func (this *Config) GetArray(key string) []interface{} {
-	if val, ok := this.Data[key]; ok {
-		return val.([]interface{})
-	}
-	return nil
-}
+// func (this *Config) GetArray(key string) []interface{} {
+// 	if val, ok := this.Data[key]; ok {
+// 		return val.([]interface{})
+// 	}
+// 	return nil
+// }
 
-func (this *Config) GetMap(key string) map[string]interface{} {
-	if val, ok := this.Data[key]; ok {
-		return val.(map[string]interface{})
-	}
-	return nil
-}
+// func (this *Config) GetMap(key string) map[string]interface{} {
+// 	if val, ok := this.Data[key]; ok {
+// 		return val.(map[string]interface{})
+// 	}
+// 	return nil
+// }

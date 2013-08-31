@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	angreal := new(server.Server)
+	angreal := server.NewServer()
 	angreal.Init()
 	angreal.Listen()
 }
