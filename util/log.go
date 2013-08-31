@@ -25,7 +25,7 @@ func (this *Log) Log(key string, message string) {
 
 func (this *Log) Access(r *http.Request) {
 	message := fmt.Sprintf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	this.Log("error", message)
+	this.Log("access", message)
 }
 
 func (this *Log) Error(r *http.Request) {

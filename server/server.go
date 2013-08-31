@@ -55,7 +55,7 @@ func (this *Server) Listen() {
 }
 
 func (this *Server) setupHosts() {
-	//loop over config vhosts and call setupHost for each
+	//loop over config hosts and setup new host for each
 	if hosts, ok := this.conf.GetDynMapSlice("hosts"); ok {
 		for _, host := range hosts {
 			h := NewHost(host)
@@ -67,6 +67,5 @@ func (this *Server) setupHosts() {
 
 func (this *Server) loadConfig() {
 	c := util.NewConfig("./angreal.conf")
-	c.Load()
-	this.conf = c
+	this.conf = c.Load()
 }

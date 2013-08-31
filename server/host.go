@@ -34,7 +34,9 @@ func (this *Host) addHeaders() {
 
 }
 
-func (this *Host) initBackends() {}
+func (this *Host) initBackends() {
+
+}
 
 func (this *Host) initStatic() {
 	url, _ := this.conf.GetString("url")

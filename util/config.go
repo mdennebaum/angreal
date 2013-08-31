@@ -17,7 +17,7 @@ func NewConfig(file string) *Config {
 	return &c
 }
 
-func (this *Config) Load() {
+func (this *Config) Load() *Config {
 	cf, e := ioutil.ReadFile(this.file)
 	if e != nil {
 		fmt.Printf("File error: %v\n", e)
@@ -26,4 +26,5 @@ func (this *Config) Load() {
 	var f interface{}
 	json.Unmarshal(cf, &f)
 	this.Map = f.(map[string]interface{})
+	return this
 }
