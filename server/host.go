@@ -6,7 +6,6 @@ logging, file server setup, reverse proxy setup, header addition
 */
 
 import (
-	// "log"
 	"github.com/mdennebaum/angreal/util"
 	"net/http"
 )
@@ -27,7 +26,13 @@ func (this *Host) Init() {
 }
 
 func (this *Host) initLog() {
+	if accessLog, ok := this.conf.GetString("access_log"); ok {
 
+	}
+
+	if errorLog, ok := this.conf.GetString("error_log"); ok {
+
+	}
 }
 
 func (this *Host) addHeaders() {
