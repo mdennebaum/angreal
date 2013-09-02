@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	// "log"
+	//"log"
 	"os"
 )
 
@@ -24,12 +24,13 @@ func (this *Config) Load() {
 		fmt.Printf("File error: %v\n", err)
 		os.Exit(1)
 	}
-	var f interface{}
-	e := json.Unmarshal(cf, &f)
-	if e == nil {
-		this.Map = f.(map[string]interface{})
-	} else {
-		fmt.Printf("Failed to parse config: %v\n", err)
-		os.Exit(1)
-	}
+	json.Unmarshal(cf, &this.Map)
+	// var f interface{}
+	//e := json.Unmarshal(cf, &f)
+	// if e == nil {
+	// 	this.Map = f.(map[string]interface{})
+	// } else {
+	// 	fmt.Printf("Failed to parse config: %v\n", err)
+	// 	os.Exit(1)
+	// }
 }
