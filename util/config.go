@@ -4,27 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	// "log"
 	"os"
 )
 
 type Config struct {
-	file string
+	filePath string
 	DynMap
 }
 
-func NewConfig(file string) *Config {
-	c := Config{file, DynMap{make(map[string]interface{})}}
+func NewConfig(filePath string) *Config {
+	c := Config{filePath, DynMap{}}
 	return &c
 }
 
-func (this *Config) Load() *Config {
-	cf, e := ioutil.ReadFile(this.file)
-	if e != nil {
-		fmt.Printf("File error: %v\n", e)
+func (this *Config) Load() {
+	cf, err := ioutil.ReadFile(this.filePath)
+	if err != nil {
+		fmt.Printf("File error: %v\n", err)
 		os.Exit(1)
 	}
 	var f interface{}
-	json.Unmarshal(cf, &f)
-	this.Map = f.(map[string]interface{})
-	return this
+	e := json.Unmarshal(cf, &f)
+	if e == nil {
+		this.Map = f.(map[string]interface{})
+	} else {
+		fmt.Printf("Failed to parse config: %v\n", err)
+		os.Exit(1)
+	}
 }

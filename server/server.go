@@ -11,6 +11,7 @@ import (
 type Server struct {
 	hosts []*Host
 	conf  *util.Config
+	log   *util.Log
 }
 
 func NewServer() *Server {
@@ -45,9 +46,9 @@ func (this *Server) Listen() {
 	//    log.Printf("Starting HTTPS frontend %s failed: %v", f.Name, err)
 	//  }
 
-	log.Println("started on port 8000")
+	log.Println("started on port 8080")
 	srv := &http.Server{
-		Addr:        ":8000",
+		Addr:        ":8080",
 		ReadTimeout: 30 * time.Second,
 	}
 	srv.ListenAndServe()
@@ -55,6 +56,7 @@ func (this *Server) Listen() {
 }
 
 func (this *Server) setupHosts() {
+
 	//loop over config hosts and setup new host for each
 	if hosts, ok := this.conf.GetDynMapSlice("hosts"); ok {
 		for _, host := range hosts {
@@ -66,6 +68,6 @@ func (this *Server) setupHosts() {
 }
 
 func (this *Server) loadConfig() {
-	c := util.NewConfig("./angreal.conf")
-	this.conf = c.Load()
+	this.conf = util.NewConfig("./angreal.conf")
+	this.conf.Load()
 }
