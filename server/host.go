@@ -1,10 +1,5 @@
 package server
 
-/*
-TODO this should be a obj that encapsulates all the logic for a host
-logging, file server setup, reverse proxy setup, header addition
-*/
-
 import (
 	"github.com/mdennebaum/angreal/util"
 	"log"
@@ -15,16 +10,20 @@ import (
 )
 
 type Host struct {
-	conf   *util.DynMap
-	url    string
-	port   string
-	root   string
-	static string
+	conf          *util.DynMap
+	url           string
+	port          string
+	root          string
+	static        string
+	proxies       []*httputil.ReverseProxy
+	backends      *util.DynMap
+	proxyPosition *util.CircularCounter
 }
 
 func NewHost(config *util.DynMap) *Host {
-	h := Host{config, "", "", "", ""}
-	return &h
+	h := new(Host)
+	h.conf = config
+	return h
 }
 
 func (this *Host) Init() {
@@ -32,11 +31,11 @@ func (this *Host) Init() {
 	this.port, _ = this.conf.GetString("port")
 	this.root, _ = this.conf.GetString("root")
 	this.static, _ = this.conf.GetString("static")
-
+	this.backends, _ = this.conf.GetDynMap("backends")
+	this.proxyPosition = util.NewCircularCounter(len(this.backends.Map))
 	this.initLog()
-	this.initStatic()
 	this.initBackends()
-
+	this.initHostHandler()
 }
 
 func (this *Host) initLog() {
@@ -53,33 +52,36 @@ func (this *Host) addHeaders(w http.ResponseWriter) {
 }
 
 func (this *Host) initBackends() {
+	if this.backends != nil {
+		for _, v := range this.backends.Map {
+			serverUrl, err := url.Parse(v.(string))
+			if err != nil {
+				log.Println(err)
+			} else {
+				this.proxies = append(this.proxies, httputil.NewSingleHostReverseProxy(serverUrl))
+			}
+		}
+	}
+}
 
-	serverUrl, _ := url.Parse("http://test1.localhost.com:8000")
-	this.addProxy("test1.localhost.com:8080/", serverUrl, true)
+//grab the next round robin backend to handle req
+func (this *Host) getProxyBackend() *httputil.ReverseProxy {
+	return this.proxies[this.proxyPosition.Next()]
 }
 
 // Provide proxying of a url. Reverse proxy just masks the path
-func (this *Host) addProxy(path string, url *url.URL, reverse bool) {
-
-	rewriteProxy := httputil.NewSingleHostReverseProxy(url)
-	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		log.Println("in prox handler")
-		if reverse == true {
-			r.RequestURI = strings.Replace(r.RequestURI, path, "", 1)
-			r.URL.Path = strings.Replace(r.URL.Path, path, "", 1)
+func (this *Host) initHostHandler() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if this.static != "" {
+			if strings.HasPrefix(r.URL.Path, this.static) {
+				http.ServeFile(w, r, this.root+r.URL.Path)
+				return
+			}
 		}
+		//get next proxy
+		rewriteProxy := this.getProxyBackend()
+		r.RequestURI = strings.Replace(r.RequestURI, "/", "", 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/", "", 1)
 		rewriteProxy.ServeHTTP(w, r)
 	})
-}
-
-func (this *Host) initStatic() {
-	http.HandleFunc(this.url+":"+this.port+"/"+this.static+"/", this.getStaticHandler())
-}
-
-func (this *Host) getStaticHandler() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		this.addHeaders(w)
-		// this.log.Access(r)
-		http.ServeFile(w, r, this.root+"/"+this.static+"/"+r.URL.Path[1:])
-	}
 }
