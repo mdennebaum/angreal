@@ -27,16 +27,8 @@ func (this *Server) Init() {
 
 //init processors
 func (this *Server) initProcs() {
-
-	//check if we have an explicit processor setting
-	if procs, ok := this.conf.GetInt("global.procs"); ok {
-		//use the explicit processor count
-		runtime.GOMAXPROCS(procs)
-		return
-	}
-
-	//use all avail processors
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	//use whats in the conf or all avail processors
+	runtime.GOMAXPROCS(this.conf.MustInt("global.procs", runtime.NumCPU()))
 
 }
 
