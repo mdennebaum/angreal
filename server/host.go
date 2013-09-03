@@ -23,6 +23,7 @@ type Host struct {
 func NewHost(config *util.DynMap) *Host {
 	h := new(Host)
 	h.conf = config
+	h.proxyChannel = make(chan *httputil.ReverseProxy)
 	return h
 }
 
@@ -64,7 +65,7 @@ func (this *Host) initBackends() {
 	
 	go func(){
 		for {
-		  for p in this.proxies {
+		  for p := range this.proxies {
 		    this.proxyChannel <- p
 		  }
 		}
