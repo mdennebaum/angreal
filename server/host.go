@@ -17,7 +17,7 @@ type Host struct {
 	static        string
 	proxies       []*httputil.ReverseProxy
 	backends      *util.DynMap
-	proxyPosition *util.CircularCounter
+	proxyChannel  chan *httputil.ReverseProxy
 }
 
 func NewHost(config *util.DynMap) *Host {
@@ -32,7 +32,6 @@ func (this *Host) Init() {
 	this.root, _ = this.conf.GetString("root")
 	this.static, _ = this.conf.GetString("static")
 	this.backends, _ = this.conf.GetDynMap("backends")
-	this.proxyPosition = util.NewCircularCounter(len(this.backends.Map))
 	this.initLog()
 	this.initBackends()
 	this.initHostHandler()
@@ -62,6 +61,18 @@ func (this *Host) initBackends() {
 			}
 		}
 	}
+	
+	go func(){
+		for {
+		  for p in this.proxies {
+		    this.proxyChannel <- p
+		  }
+		}
+	}
+}
+
+func (this *Host) Next() *httputil.ReverseProxy{
+  return <- this.proxyChannel
 }
 
 //grab the next round robin backend to handle req
@@ -79,7 +90,7 @@ func (this *Host) initHostHandler() {
 			}
 		}
 		//get next proxy
-		rewriteProxy := this.getProxyBackend()
+		rewriteProxy := this.Next()
 		r.RequestURI = strings.Replace(r.RequestURI, "/", "", 1)
 		r.URL.Path = strings.Replace(r.URL.Path, "/", "", 1)
 		rewriteProxy.ServeHTTP(w, r)
