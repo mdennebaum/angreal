@@ -29,7 +29,6 @@ func (this *Server) Init() {
 func (this *Server) initProcs() {
 	//use whats in the conf or all avail processors
 	runtime.GOMAXPROCS(this.conf.MustInt("global.procs", runtime.NumCPU()))
-
 }
 
 func (this *Server) Listen() {
@@ -48,7 +47,6 @@ func (this *Server) Listen() {
 }
 
 func (this *Server) setupHosts() {
-
 	//loop over config hosts and setup new host for each
 	if hosts, ok := this.conf.GetDynMapSlice("hosts"); ok {
 		for _, host := range hosts {
