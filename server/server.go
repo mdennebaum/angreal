@@ -19,24 +19,25 @@ func NewServer() *Server {
 	return &s
 }
 
-func (this *Server) Init() {
-	this.loadConfig()
-	this.initProcs()
-	this.setupHosts()
+func (s *Server) Init() {
+	s.loadConfig()
+	s.initProcs()
+	s.setupHosts()
 }
 
 //init processors
-func (this *Server) initProcs() {
+func (s *Server) initProcs() {
 	//use whats in the conf or all avail processors
-	runtime.GOMAXPROCS(this.conf.MustInt("global.procs", runtime.NumCPU()))
+	runtime.GOMAXPROCS(s.conf.MustInt("global.procs", runtime.NumCPU()))
 }
 
-func (this *Server) Listen() {
+func (s *Server) Listen() {
 	//TODO serve https
 	//  if err := http.ListenAndServeTLS(f.CertFile, f.KeyFile); err != nil {
 	//    log.Printf("Starting HTTPS frontend %s failed: %v", f.Name, err)
 	//  }
 
+	//TODO get the ports for this server
 	log.Println("started on port 8080")
 	srv := &http.Server{
 		Addr:        ":8080",
@@ -46,18 +47,18 @@ func (this *Server) Listen() {
 
 }
 
-func (this *Server) setupHosts() {
+func (s *Server) setupHosts() {
 	//loop over config hosts and setup new host for each
-	if hosts, ok := this.conf.GetDynMapSlice("hosts"); ok {
+	if hosts, ok := s.conf.GetDynMapSlice("hosts"); ok {
 		for _, host := range hosts {
 			h := NewHost(host)
 			h.Init()
-			this.hosts = append(this.hosts, h)
+			s.hosts = append(s.hosts, h)
 		}
 	}
 }
 
-func (this *Server) loadConfig() {
-	this.conf = util.NewConfig("./angreal.conf")
-	this.conf.Load()
+func (s *Server) loadConfig() {
+	s.conf = util.NewConfig("./angreal.conf")
+	s.conf.Load()
 }
