@@ -9,20 +9,23 @@ import (
 )
 
 type Server struct {
-	hosts []*Host
-	conf  *util.Config
-	log   *util.Log
+	hosts      []*Host
+	conf       *util.Config
+	log        *util.Log
+	configPath string
 }
 
-func NewServer() *Server {
+func NewServer(configPath string) *Server {
 	s := Server{}
+	s.configPath = configPath
 	return &s
 }
 
-func (s *Server) Init() {
+func (s *Server) Init() *Server {
 	s.loadConfig()
 	s.initProcs()
 	s.setupHosts()
+	return s
 }
 
 //init processors
@@ -59,6 +62,6 @@ func (s *Server) setupHosts() {
 }
 
 func (s *Server) loadConfig() {
-	s.conf = util.NewConfig("./angreal.conf")
+	s.conf = util.NewConfig(s.configPath)
 	s.conf.Load()
 }
