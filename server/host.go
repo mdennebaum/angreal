@@ -11,9 +11,10 @@ import (
 
 type Host struct {
 	url          string
-	port         string
 	root         string
 	static       string
+	port         string
+	reqLog       *util.Log
 	conf         *util.DynMap
 	backends     *util.DynMap
 	headers      *util.DynMap
@@ -21,16 +22,17 @@ type Host struct {
 	proxyChannel chan *httputil.ReverseProxy
 }
 
-func NewHost(config *util.DynMap) *Host {
+func NewHost(config *util.DynMap, port string) *Host {
 	h := new(Host)
 	h.conf = config
+	h.port = port
+	h.reqLog = util.NewLog()
 	h.proxyChannel = make(chan *httputil.ReverseProxy)
 	return h
 }
 
 func (h *Host) Init() {
 	h.url = h.conf.MustString("url", "/")
-	h.port = h.conf.MustString("port", "8000")
 	h.root, _ = h.conf.GetString("root")
 	h.static, _ = h.conf.GetString("static")
 	h.backends, _ = h.conf.GetDynMap("backends")
@@ -41,12 +43,12 @@ func (h *Host) Init() {
 }
 
 func (h *Host) initLog() {
-	// if accessLog, ok := h.conf.GetString("access_log"); ok {
-
-	// }
-	// if errorLog, ok := h.conf.GetString("error_log"); ok {
-
-	// }
+	if accessLog, ok := h.conf.GetString("access_log"); ok {
+		h.reqLog.AddLog("access", accessLog)
+	}
+	if errorLog, ok := h.conf.GetString("error_log"); ok {
+		h.reqLog.AddLog("error", errorLog)
+	}
 }
 
 func (h *Host) addHeaders(w http.ResponseWriter) http.ResponseWriter {
@@ -97,6 +99,7 @@ func (h *Host) NextProxy() *httputil.ReverseProxy {
 // Provide proxying of a url. Reverse proxy just masks the path
 func (h *Host) initHostHandler() {
 	http.HandleFunc(h.url+":"+h.port+"/", func(w http.ResponseWriter, r *http.Request) {
+		h.reqLog.Access(r)
 		w = h.addHeaders(w)
 		if h.static != "" {
 			if strings.HasPrefix(r.URL.Path, h.static) {

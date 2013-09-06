@@ -12,6 +12,7 @@ type Server struct {
 	hosts      []*Host
 	conf       *util.Config
 	log        *util.Log
+	port       string
 	configPath string
 }
 
@@ -23,6 +24,7 @@ func NewServer(configPath string) *Server {
 
 func (s *Server) Init() *Server {
 	s.loadConfig()
+	s.port = s.conf.MustString("global.port", "8080")
 	s.initProcs()
 	s.setupHosts()
 	return s
@@ -41,9 +43,9 @@ func (s *Server) Listen() {
 	//  }
 
 	//TODO get the ports for this server
-	log.Println("started on port 8080")
+	log.Println("started on port " + s.port)
 	srv := &http.Server{
-		Addr:        ":8080",
+		Addr:        ":" + s.port,
 		ReadTimeout: 30 * time.Second,
 	}
 	srv.ListenAndServe()
@@ -54,7 +56,8 @@ func (s *Server) setupHosts() {
 	//loop over config hosts and setup new host for each
 	if hosts, ok := s.conf.GetDynMapSlice("hosts"); ok {
 		for _, host := range hosts {
-			h := NewHost(host)
+			log.Println(s.port)
+			h := NewHost(host, s.port)
 			h.Init()
 			s.hosts = append(s.hosts, h)
 		}

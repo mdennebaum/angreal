@@ -15,12 +15,19 @@ type Log struct {
 	logFiles map[string]*os.File
 }
 
+func NewLog() *Log {
+	log := Log{make(map[string]*os.File)}
+	return &log
+}
+
 func (l *Log) Log(key string, message string) {
-	if logFile, ok := l.logFiles[key]; ok {
-		fmt.Fprintf(logFile, "%s\n", message)
-	} else {
-		log.Println("Log file not found: %s", message)
-	}
+	go func() {
+		if logFile, ok := l.logFiles[key]; ok {
+			fmt.Fprintf(logFile, "%s", message)
+		} else {
+			log.Println("Log file not found: %s", message)
+		}
+	}()
 }
 
 func (l *Log) Access(r *http.Request) {
@@ -45,9 +52,9 @@ func (l *Log) CloseAll() {
 	}
 }
 
-func (l *Log) AddLog(path string, key string) {
+func (l *Log) AddLog(key string, path string) {
 	var err error
-	l.logFiles[key], err = os.Create(path)
+	l.logFiles[key], err = os.OpenFile(path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal("Log file create:", err)
 		return
